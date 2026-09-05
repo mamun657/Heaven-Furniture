@@ -7,6 +7,33 @@ import { businessKnowledge, getLocationResponse, getOpeningStatus, isLocationQue
 const app = express()
 const port = Number(globalThis.process.env.PORT || 3000)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const allowedOrigins = [
+  globalThis.process.env.FRONTEND_ORIGIN,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+].filter(Boolean)
+
+app.use((request, response, next) => {
+  const origin = request.headers.origin
+  const originUrl = origin ? new URL(origin) : null
+  const isDevOrigin = originUrl && /localhost|127\.0\.0\.1/.test(originUrl.hostname)
+  const isAllowedOrigin = origin && (allowedOrigins.includes(origin) || isDevOrigin)
+
+  if (origin && isAllowedOrigin) {
+    response.setHeader('Access-Control-Allow-Origin', origin)
+  } else if (!origin) {
+    response.setHeader('Access-Control-Allow-Origin', '*')
+  }
+
+  response.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+  if (request.method === 'OPTIONS') {
+    return response.sendStatus(204)
+  }
+
+  return next()
+})
 
 app.use(express.json({ limit: '32kb' }))
 

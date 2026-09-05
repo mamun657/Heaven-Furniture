@@ -8,6 +8,8 @@ const quickQuestions = [
   'What furniture do you offer?',
 ]
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+
 const navigationLabels = {
   collections: 'Explore Collections',
   bespoke: 'Explore Bespoke',
@@ -111,7 +113,7 @@ function Chatbot() {
         return
       }
 
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${apiBaseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

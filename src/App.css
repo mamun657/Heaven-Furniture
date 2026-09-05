@@ -766,6 +766,8 @@ main {
 
 .story-block {
   display: grid;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: minmax(0, 1.85fr) minmax(280px, 1fr);
   align-items: center;
   gap: clamp(36px, 5vw, 84px);
@@ -780,6 +782,7 @@ main {
 .story-media {
   position: relative;
   width: 100%;
+  min-width: 0;
   border-radius: 18px;
   border: 1px solid rgba(24, 32, 31, 0.08);
   background: rgba(255, 255, 255, 0.2);
@@ -810,7 +813,9 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 100%;
   max-width: 480px;
+  min-width: 0;
   z-index: 2;
 }
 
@@ -1415,7 +1420,6 @@ main {
 
   .story-block,
   .story-block.reverse {
-    grid-template-columns: 1fr;
     min-height: auto;
   }
 

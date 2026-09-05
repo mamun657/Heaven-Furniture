@@ -855,17 +855,24 @@ function App() {
               <video
                 key="hero-video"
                 className={videoReady ? 'hero-video is-visible' : 'hero-video'}
-                src="/images/hero-video.mp4"
                 autoPlay
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="metadata"
+                poster={pic1}
+                aria-label="Heaven Furniture Mart luxury furniture"
                 onLoadedData={() => setVideoReady(true)}
                 onCanPlay={() => setVideoReady(true)}
-                onError={() => setVideoReady(false)}
-                aria-label="Heaven Furniture Mart luxury furniture"
-              />
+                onError={() => {
+                  if (import.meta.env.DEV) {
+                    console.error('Hero video failed to load:', '/images/hero-video.mp4')
+                  }
+                  setVideoReady(false)
+                }}
+              >
+                <source src="/images/hero-video.mp4" type="video/mp4" />
+              </video>
               <div className="hero-video-overlay" />
 
               <div className="video-status" aria-label={videoReady ? 'Video playing indicator' : 'Video preview loading'}>
@@ -896,18 +903,25 @@ function App() {
               <video
                 ref={craftVideoRef}
                 className="is-visible"
-                src="/images/craft-video.mp4"
                 autoPlay
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="metadata"
+                poster={pic2}
+                aria-label="Luxury furniture craftsmanship video"
                 onCanPlay={() => setCraftVideoPlaying(true)}
                 onPlay={() => setCraftVideoPlaying(true)}
                 onPause={() => setCraftVideoPlaying(false)}
-                onError={() => setCraftVideoPlaying(false)}
-                aria-label="Luxury furniture craftsmanship video"
-              />
+                onError={() => {
+                  if (import.meta.env.DEV) {
+                    console.error('Craft video failed to load:', '/images/craft-video.mp4')
+                  }
+                  setCraftVideoPlaying(false)
+                }}
+              >
+                <source src="/images/craft-video.mp4" type="video/mp4" />
+              </video>
               <div className="video-status" aria-label="Video playing indicator">
                 <span className="video-status-dot" aria-hidden="true" />
                 <span>PLAYING</span>
