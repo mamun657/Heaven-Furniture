@@ -854,16 +854,16 @@ function App() {
             <div className="hero-video-shell">
               <video
                 key="hero-video"
-                className={videoReady ? 'hero-video is-visible' : 'hero-video'}
+                className="hero-video"
                 autoPlay
                 muted
                 loop
                 playsInline
-                preload="metadata"
-                poster={pic1}
+                preload="auto"
                 aria-label="Heaven Furniture Mart luxury furniture"
                 onLoadedData={() => setVideoReady(true)}
                 onCanPlay={() => setVideoReady(true)}
+                onPlay={() => setVideoReady(true)}
                 onError={() => {
                   if (import.meta.env.DEV) {
                     console.error('Hero video failed to load:', '/images/hero-video.mp4')
