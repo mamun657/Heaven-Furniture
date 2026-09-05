@@ -895,6 +895,7 @@ function App() {
                 loop
                 playsInline
                 preload="auto"
+                poster="/images/hero-video-poster.jpg"
                 aria-label="Heaven Furniture Mart luxury furniture"
                 onLoadedData={() => setVideoReady(true)}
                 onCanPlay={() => setVideoReady(true)}
@@ -943,7 +944,7 @@ function App() {
                 loop
                 playsInline
                 preload="metadata"
-                poster={pic2}
+                poster="/images/craft-video-poster.jpg"
                 aria-label="Luxury furniture craftsmanship video"
                 onCanPlay={() => setCraftVideoPlaying(true)}
                 onPlay={() => setCraftVideoPlaying(true)}
