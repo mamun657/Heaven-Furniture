@@ -22,6 +22,11 @@ import pic18 from '../picture/pic18.png'
 import pic19 from '../picture/pic19.png'
 import pic20 from '../picture/pic20.png'
 import pic21 from '../picture/pic21.png'
+import facebookIcon from './assets/social-facebook.svg'
+import instagramIcon from './assets/social-instagram.svg'
+import youtubeIcon from './assets/social-youtube.svg'
+import whatsappIcon from './assets/social-whatsapp.svg'
+import showroomPinIcon from './assets/icons8-showroom-pin.svg'
 import owner23 from './owner/pic23.jpg'
 import owner24 from './owner/pic24.jpg'
 import Chatbot from './chatbot/Chatbot'
@@ -507,7 +512,22 @@ function FurnitureShowcase() {
 
 function AchievementShowcase() {
   const [activeIndex, setActiveIndex] = useState(0)
-  const activeItem = achievementItems[activeIndex]
+  const unlockTimerRef = useRef(null)
+
+  useEffect(() => {
+    return () => window.clearTimeout(unlockTimerRef.current)
+  }, [])
+
+  const changeSlide = (nextIndex) => {
+    if (unlockTimerRef.current) {
+      return
+    }
+
+    setActiveIndex((nextIndex + achievementItems.length) % achievementItems.length)
+    unlockTimerRef.current = window.setTimeout(() => {
+      unlockTimerRef.current = null
+    }, 700)
+  }
 
   return (
     <section className="work-showcase section-shell" id="work">
@@ -517,30 +537,45 @@ function AchievementShowcase() {
         <p>People, projects and milestones that continue to shape Heaven Furniture Mart.</p>
       </div>
       <div className="work-gallery" data-reveal>
-        <div className="work-feature">
-          <img key={activeItem.image} src={activeItem.image} alt={activeItem.alt} />
-          <div className="work-overlay">
-            <p>{activeItem.category}</p>
-            <h3>{activeItem.title}</h3>
-            <span>{activeItem.description}</span>
-          </div>
-          <div className="work-counter">{String(activeIndex + 1).padStart(2, '0')} / {String(achievementItems.length).padStart(2, '0')}</div>
-        </div>
-        <div className="work-thumbnails" role="tablist" aria-label="Work and achievements">
-          {achievementItems.map((item, index) => (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeIndex === index}
-              aria-label={`Show ${item.title}`}
-              className={`work-thumb ${activeIndex === index ? 'is-active' : ''}`}
-              key={item.title}
-              onClick={() => setActiveIndex(index)}
-            >
-              <img src={item.image} alt="" aria-hidden="true" />
-              <span>{String(index + 1).padStart(2, '0')}</span>
-            </button>
-          ))}
+        <div className="work-stack" aria-live="polite">
+          {achievementItems.map((item, index) => {
+            const depth = (index - activeIndex + achievementItems.length) % achievementItems.length
+            const isFront = depth === 0
+            const offset = isFront ? 0 : 54
+            const scale = isFront ? 1 : 0.9
+
+            return (
+              <article
+                className={`work-stack-card ${isFront ? 'is-front' : ''}`}
+                key={item.title}
+                role="button"
+                tabIndex={isFront ? 0 : -1}
+                aria-label={isFront ? `Show next project after ${item.title}` : item.title}
+                onClick={isFront ? () => changeSlide(activeIndex + 1) : undefined}
+                onKeyDown={isFront ? (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    changeSlide(activeIndex + 1)
+                  }
+                } : undefined}
+                style={{
+                  transform: `translate3d(calc(-50% + ${offset}px), -50%, 0) scale(${scale})`,
+                  opacity: isFront ? 1 : 0.72,
+                  zIndex: achievementItems.length - depth,
+                }}
+              >
+                <img className="work-feature-image" src={item.image} alt={item.alt} />
+                <div className="work-overlay">
+                  <p>{item.category}</p>
+                  <h3>{item.title}</h3>
+                  <span>{item.description}</span>
+                </div>
+                {isFront && (
+                  <div className="work-counter">{String(activeIndex + 1).padStart(2, '0')} / {String(achievementItems.length).padStart(2, '0')}</div>
+                )}
+              </article>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -627,7 +662,7 @@ function ShowroomLocation() {
     <section className="showroom-location section-shell" id="showroom" aria-labelledby="showroom-location-title">
       <div className="showroom-location-header" data-reveal>
         <div className="showroom-location-copy">
-          <span className="showroom-location-pin" aria-hidden="true"><Icon name="location" /></span>
+          <span className="showroom-location-pin" aria-hidden="true"><img src={showroomPinIcon} alt="" /></span>
           <div>
             <p className="section-label">FLAGSHIP SHOWROOM LOCATION</p>
             <h2 id="showroom-location-title">{location.address}</h2>
@@ -1129,12 +1164,10 @@ function App() {
 
         <section className="testimonial section-shell">
           <div className="quote-block" data-reveal>
-            <p className="section-label">A WORD FROM OUR MANAGING DIRECTOR</p>
-            <blockquote>
-              “At Heaven Furniture Mart, we believe furniture is more than just function; it is a reflection of lifestyle, taste, and comfort. Every piece we create is designed to bring lasting elegance into the homes of our clients.”
-            </blockquote>
             <div className="quote-meta">
-              <div className="quote-avatar">A</div>
+              <div className="quote-avatar">
+                <img src="/images/managing-director-h.png" alt="Abul Kalam Bhuiyan, Managing Director" />
+              </div>
               <div>
                 <strong>Abul Kalam Bhuiyan</strong>
                 <span>Managing Director</span>
@@ -1200,8 +1233,12 @@ function App() {
               <span className="brand-sub">FURNITURE MART</span>
             </div>
             <p className="footer-description">Premium furniture & bespoke craftsmanship designed to elevate your living experience.</p>
-            <div className="footer-contact">
-              <div className="footer-contact-row"><span className="footer-contact-icon" aria-hidden="true"><Icon name="location" /></span><span>Opposite of RAK Ceramics<br />Agrabad Access Road<br />Chattogram 4217, Bangladesh</span></div>
+          </div>
+
+          <div className="footer-contact" data-reveal>
+            <p className="footer-kicker">VISIT / CONTACT</p>
+            <div className="footer-contact-list">
+              <div className="footer-contact-row"><span className="footer-contact-icon" aria-hidden="true"><Icon name="location" /></span><span>Opposite of RAK Ceramics<br />Agrabad Access Road<br />Chattogram</span></div>
               <a className="footer-contact-row" href="tel:+8801960481983"><span className="footer-contact-icon" aria-hidden="true"><Icon name="phone" /></span><span>+880 1960-481983</span></a>
               <a className="footer-contact-row" href="mailto:heavenfurnituremart@gmail.com"><span className="footer-contact-icon" aria-hidden="true"><Icon name="mail" /></span><span>heavenfurnituremart@gmail.com</span></a>
             </div>
@@ -1218,9 +1255,10 @@ function App() {
           <div className="footer-social" data-reveal>
             <p className="footer-kicker">FOLLOW US</p>
             <div className="footer-social-grid">
-              <a href="https://www.facebook.com/HeavenFurnitureMart" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-              <a href="https://www.instagram.com/heaven_furniture_ltd" target="_blank" rel="noreferrer" aria-label="Instagram">◎</a>
-              <a href="https://www.youtube.com/@HeavenFurnitureMart" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
+              <a href="https://www.facebook.com/HeavenFurnitureMart" target="_blank" rel="noreferrer" aria-label="Facebook"><img src={facebookIcon} alt="" /></a>
+              <a href="https://www.instagram.com/heaven_furniture_ltd" target="_blank" rel="noreferrer" aria-label="Instagram"><img src={instagramIcon} alt="" /></a>
+              <a href="https://www.youtube.com/@HeavenFurnitureMart" target="_blank" rel="noreferrer" aria-label="YouTube"><img src={youtubeIcon} alt="" /></a>
+              <a href="https://wa.me/8801960481983" target="_blank" rel="noreferrer" aria-label="Chat with us on WhatsApp"><img src={whatsappIcon} alt="" /></a>
             </div>
           </div>
         </div>
