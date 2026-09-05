@@ -27,6 +27,7 @@ import instagramIcon from './assets/social-instagram.svg'
 import youtubeIcon from './assets/social-youtube.svg'
 import whatsappIcon from './assets/social-whatsapp.svg'
 import showroomPinIcon from './assets/icons8-showroom-pin.svg'
+import icons8StencilA from './assets/icons8-stencil-a.png'
 import owner23 from './owner/pic23.jpg'
 import owner24 from './owner/pic24.jpg'
 import Chatbot from './chatbot/Chatbot'
@@ -898,7 +899,9 @@ function App() {
         return
       }
 
-      if (window.innerWidth >= 860) {
+      const isDesktopVideoLayout = window.matchMedia('(min-width: 861px)').matches
+
+      if (isDesktopVideoLayout) {
         gsap.set(frame, {
           clearProps: 'all',
         })
@@ -949,7 +952,7 @@ function App() {
     <div className="page-shell">
       <header className={`topbar ${navScrolled ? 'scrolled' : ''}`}>
         <div className="brand-block">
-          <span className="brand-name">HE<span className="brand-accent">A</span>VEN</span>
+          <span className="brand-name" role="img" aria-label="HEAVEN">HE<span className="brand-accent"><img src={icons8StencilA} alt="" aria-hidden="true" /></span>VEN</span>
           <span className="brand-sub">FURNITURE MART</span>
         </div>
 
@@ -1286,7 +1289,7 @@ function App() {
         <div className="footer-main">
           <div className="footer-brand" data-reveal>
             <div className="brand-block footer-block">
-              <span className="brand-name">HE<span className="brand-accent">A</span>VEN</span>
+              <span className="brand-name" role="img" aria-label="HEAVEN">HE<span className="brand-accent"><img src={icons8StencilA} alt="" aria-hidden="true" /></span>VEN</span>
               <span className="brand-sub">FURNITURE MART</span>
             </div>
             <p className="footer-description">Premium furniture & bespoke craftsmanship designed to elevate your living experience.</p>

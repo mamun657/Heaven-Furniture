@@ -182,7 +182,22 @@ main {
 }
 
 .brand-accent {
+  display: inline-flex;
+  width: 0.74em;
+  height: 0.74em;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.02em;
+  vertical-align: -0.02em;
   color: #d08a3a;
+}
+
+.brand-accent img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1) sepia(0.58) saturate(1.35) hue-rotate(354deg) brightness(0.9);
 }
 
 .brand-sub {
@@ -404,6 +419,10 @@ main {
   font-weight: 600;
 }
 
+.hero-video-copy .eyebrow {
+  color: #c6a15b;
+}
+
 .hero-video-copy h1,
 .featured h2,
 .bespoke-spotlight h2,
@@ -420,12 +439,13 @@ main {
 
 .hero-video-copy h1 {
   margin: 0;
+  color: #f5f1e8;
   font-size: clamp(2.9rem, 4.4vw, 4.9rem);
   line-height: 0.9;
   max-width: 620px;
 }
 
-.hero-video-copy p:last-of-type {
+.hero-video-copy p:not(.eyebrow):last-of-type {
   max-width: 520px;
   margin: 18px 0 0;
   color: rgba(245, 241, 232, 0.85);
@@ -2529,7 +2549,7 @@ main {
   .topbar .brand-block {
     padding: 0;
     background: transparent;
-    border: 0;
+      color: #c6a15b;
     box-shadow: none;
   }
 
@@ -2581,6 +2601,12 @@ main {
   .hero-video-section {
     min-height: auto;
     padding: 94px 28px 24px;
+  }
+
+  .hero-video-shell {
+    height: clamp(320px, 78vw, 460px);
+    aspect-ratio: auto;
+    clip-path: inset(0) !important;
   }
 
   .video-highlight-stage {
