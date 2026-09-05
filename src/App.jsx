@@ -687,9 +687,30 @@ function App() {
   const [activeNavItem, setActiveNavItem] = useState('collections')
   const [menuOpen, setMenuOpen] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
+  const [craftVideoLoaded, setCraftVideoLoaded] = useState(false)
   const [craftVideoPlaying, setCraftVideoPlaying] = useState(false)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const craftVideoRef = useRef(null)
+
+  useEffect(() => {
+    const video = craftVideoRef.current
+    const section = video?.closest('.video-highlight')
+
+    if (!video || !section) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCraftVideoLoaded(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '320px 0px' },
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const onScroll = () => {
@@ -907,7 +928,8 @@ function App() {
                   setVideoReady(false)
                 }}
               >
-                <source src="/images/hero-video.mp4" type="video/mp4" />
+                <source src="/images/hero-video-mobile.mp4" type="video/mp4" media="(max-width: 767px)" />
+                <source src="/images/hero-video-web.mp4" type="video/mp4" />
               </video>
               <div className="hero-video-overlay" />
 
@@ -943,7 +965,7 @@ function App() {
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="none"
                 poster="/images/craft-video-poster.jpg"
                 aria-label="Luxury furniture craftsmanship video"
                 onCanPlay={() => setCraftVideoPlaying(true)}
@@ -956,7 +978,7 @@ function App() {
                   setCraftVideoPlaying(false)
                 }}
               >
-                <source src="/images/craft-video.mp4" type="video/mp4" />
+                {craftVideoLoaded && <source src="/images/craft-video-web.mp4" type="video/mp4" />}
               </video>
               <div className="video-status" aria-label="Video playing indicator">
                 <span className="video-status-dot" aria-hidden="true" />
