@@ -853,14 +853,16 @@ function App() {
             <div className="hero-video-reveal">
             <div className="hero-video-shell">
               <video
-                className="hero-video"
-                src="/images/heaven%20video.mp4"
+                key="hero-video"
+                className={videoReady ? 'hero-video is-visible' : 'hero-video'}
+                src="/images/hero-video.mp4"
                 autoPlay
                 muted
                 loop
                 playsInline
                 preload="auto"
                 onLoadedData={() => setVideoReady(true)}
+                onCanPlay={() => setVideoReady(true)}
                 onError={() => setVideoReady(false)}
                 aria-label="Heaven Furniture Mart luxury furniture"
               />
@@ -894,14 +896,16 @@ function App() {
               <video
                 ref={craftVideoRef}
                 className="is-visible"
-                src="/images/video1.mp4"
+                src="/images/craft-video.mp4"
                 autoPlay
                 muted
                 loop
                 playsInline
                 preload="auto"
+                onCanPlay={() => setCraftVideoPlaying(true)}
                 onPlay={() => setCraftVideoPlaying(true)}
                 onPause={() => setCraftVideoPlaying(false)}
+                onError={() => setCraftVideoPlaying(false)}
                 aria-label="Luxury furniture craftsmanship video"
               />
               <div className="video-status" aria-label="Video playing indicator">
