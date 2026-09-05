@@ -12,8 +12,29 @@ const maxMessageLength = 2000
 const requestWindowMs = 60_000
 const requestLimit = 30
 const requestLog = new Map()
+const configuredFrontendOrigins = (globalThis.process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean)
+const allowedOrigins = new Set([
+  ...configuredFrontendOrigins,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+])
 
 app.disable('x-powered-by')
+app.use((request, response, next) => {
+  const origin = request.headers.origin
+  if (!origin) return next()
+  if (allowedOrigins.has(origin)) {
+    response.setHeader('Access-Control-Allow-Origin', origin)
+    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    response.setHeader('Vary', 'Origin')
+    if (request.method === 'OPTIONS') return response.sendStatus(204)
+  }
+  return next()
+})
 app.use(express.json({ limit: '32kb' }))
 
 function isRateLimited(request) {
@@ -159,4 +180,4 @@ app.use((error, _request, response, next) => {
   return response.status(500).json({ reply: 'The server could not process that request.' })
 })
 
-app.listen(port, () => console.log(`Heaven Furniture server listening on port ${port}`))
+app.listen(port, '0.0.0.0', () => console.log(`Heaven Furniture server listening on port ${port}`))

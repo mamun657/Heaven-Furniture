@@ -56,6 +56,7 @@ function Chatbot() {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const messageIdRef = useRef(0)
+  const apiBaseUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -84,7 +85,7 @@ function Chatbot() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${apiBaseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
