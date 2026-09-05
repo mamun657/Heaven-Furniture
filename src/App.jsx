@@ -38,7 +38,6 @@ const navItems = [
   { label: 'Collections', href: '#collections' },
   { label: 'Work', href: '#work' },
   { label: 'Showroom', href: '#showroom' },
-  { label: 'Contact', href: '#contact' },
 ]
 
 const storyItems = [
@@ -682,6 +681,86 @@ function ShowroomLocation() {
   )
 }
 
+function QuoteSection() {
+  const [statusMessage, setStatusMessage] = useState('')
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const name = String(formData.get('name') || '').trim()
+    const phone = String(formData.get('phone') || '').trim()
+    const details = String(formData.get('details') || '').trim()
+
+    if (!name || !phone) {
+      setStatusMessage('Please enter your name and phone number so we can prepare a custom quote.')
+      form.elements.name?.focus()
+      return
+    }
+
+    const message = [
+      'Hello Heaven Furniture Mart,',
+      '',
+      'I would like to request a custom quote.',
+      `Name: ${name}`,
+      `Phone / WhatsApp Number: ${phone}`,
+      details ? `Space details: ${details}` : 'Space details: Not provided',
+      '',
+      'Please prepare pricing and available options for my project.',
+    ].join('\n')
+
+    window.open(`https://wa.me/8801960481983?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
+    setStatusMessage('Your quote details are ready in WhatsApp. Please send the message to complete your request.')
+    form.reset()
+  }
+
+  return (
+    <section className="quote-section section-shell" id="quote">
+      <div className="quote-card" data-reveal>
+        <p className="section-label">FREE DESIGN CONSULTATION · BESPOKE CRAFTSMANSHIP · DELIVERY & INSTALLATION</p>
+        <h2>Request a Custom Quote</h2>
+        <p className="quote-subtitle">Tell us about your space. We will prepare customized pricing &amp; options.</p>
+
+        <form className="quote-form" onSubmit={handleSubmit} noValidate>
+          <div className="quote-field-row">
+            <label className="quote-field">
+              <span>YOUR NAME *</span>
+              <input type="text" name="name" placeholder="e.g. Minul Islam" aria-label="Your name" />
+            </label>
+
+            <label className="quote-field">
+              <span>PHONE / WHATSAPP NUMBER *</span>
+              <input type="tel" name="phone" placeholder="+8801........." aria-label="Phone or WhatsApp number" />
+            </label>
+          </div>
+
+          <label className="quote-field quote-field-wide">
+            <span>TELL US ABOUT YOUR SPACE &amp; DIMENSIONS (OPTIONAL)</span>
+            <textarea
+              name="details"
+              rows="4"
+              placeholder="Approx room size, preferred wood tone (Teak/Oak/Walnut), fabric..."
+              aria-label="Tell us about your space and dimensions"
+            />
+          </label>
+
+          <button type="submit" className="quote-submit">
+            SEND REQUEST VIA WHATSAPP <span aria-hidden="true">→</span>
+          </button>
+
+          <div className="quote-meta">
+            <span>Direct Call: <a href="tel:+8801960481983">+880 1960-481983</a></span>
+            <span>Agrabad Showroom</span>
+          </div>
+
+          {statusMessage && <p className="quote-status" role="status">{statusMessage}</p>}
+        </form>
+      </div>
+    </section>
+  )
+}
+
 function App() {
   const [navScrolled, setNavScrolled] = useState(false)
   const [activeNavItem, setActiveNavItem] = useState('collections')
@@ -689,7 +768,6 @@ function App() {
   const [videoReady, setVideoReady] = useState(false)
   const [craftVideoLoaded, setCraftVideoLoaded] = useState(false)
   const [craftVideoPlaying, setCraftVideoPlaying] = useState(false)
-  const [formSubmitted, setFormSubmitted] = useState(false)
   const craftVideoRef = useRef(null)
 
   useEffect(() => {
@@ -802,9 +880,10 @@ function App() {
           { clipPath: 'inset(0 0% 0 0)', ease: 'none' },
           0,
         )
+        gsap.set(heroCopy, { y: 0, opacity: 1, visibility: 'visible' })
         heroTimeline.fromTo(
           heroCopy,
-          { y: 70, opacity: 0.2 },
+          { y: 18, opacity: 0.98 },
           { y: 0, opacity: 1, ease: 'none' },
           0,
         )
@@ -1050,7 +1129,7 @@ function App() {
                       <span className="story-tag">{item.tag}</span>
                     </div>
                   )}
-                  <a href="#contact" className="story-link">
+                  <a href="#quote" className="story-link">
                     VIEW DETAILS <span aria-hidden="true">→</span>
                   </a>
                 </div>
@@ -1071,7 +1150,7 @@ function App() {
               <li>Colors</li>
               <li>Design details</li>
             </ul>
-            <a href="#contact" className="button button-primary small-button">
+            <a href="#quote" className="button button-primary small-button">
               START YOUR PROJECT <span aria-hidden="true">→</span>
             </a>
           </div>
@@ -1200,52 +1279,7 @@ function App() {
         </section>
 
         <FaqSection />
-
-        <section className="final-cta section-shell" id="contact">
-          <form className="contact-form" data-reveal onSubmit={(event) => {
-            event.preventDefault()
-            setFormSubmitted(true)
-          }}>
-            <div className="form-header">
-              <p className="section-label">CONTACT</p>
-              <h3>Tell us about your idea.</h3>
-            </div>
-            <div className="form-grid">
-              <label>
-                <span>Full Name</span>
-                <input type="text" placeholder="Your name" required />
-              </label>
-              <label>
-                <span>Phone Number</span>
-                <input type="tel" placeholder="Your phone" required />
-              </label>
-              <label>
-                <span>Email</span>
-                <input type="email" placeholder="Your email" required />
-              </label>
-              <label>
-                <span>Project Type</span>
-                <select defaultValue="" required>
-                  <option value="" disabled>Select a project type</option>
-                  <option>Living Room</option>
-                  <option>Bedroom</option>
-                  <option>Dining</option>
-                  <option>Office &amp; Study</option>
-                  <option>Bespoke Furniture</option>
-                  <option>Interior Solution</option>
-                </select>
-              </label>
-              <label className="full-width">
-                <span>Project Details</span>
-                <textarea rows="4" placeholder="Tell us what you’re imagining" required />
-              </label>
-            </div>
-            <button type="submit" className="button button-primary submit-button">
-              {formSubmitted ? 'REQUEST RECEIVED' : 'SEND REQUEST'} <span aria-hidden="true">→</span>
-            </button>
-            {formSubmitted && <p className="form-success" role="status">Thank you. We’ll be in touch shortly.</p>}
-          </form>
-        </section>
+        <QuoteSection />
       </main>
 
       <footer className="site-footer section-shell">

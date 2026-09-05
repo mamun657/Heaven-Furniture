@@ -34,7 +34,6 @@ export const businessKnowledge = {
     Work: '#work',
     Bespoke: '#bespoke',
     Showroom: '#showroom',
-    Contact: '#contact',
     FAQ: '#faq-title',
   },
 }
@@ -45,7 +44,7 @@ export function isLocationQuestion(question = '') {
 }
 
 export function getLocationResponse() {
-  return `Our flagship showroom is located at ${businessKnowledge.location.address}.\n\nYou can view the exact location on Google Maps here.`
+  return `Our flagship showroom is located at ${businessKnowledge.location.address}.\n\nGoogle Maps: ${businessKnowledge.location.googleMapsUrl}`
 }
 
 export function getDhakaDateParts(date = new Date()) {

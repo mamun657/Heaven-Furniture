@@ -39,10 +39,17 @@ function getFurnitureAnswer(question) {
 function getBusinessAnswer(question) {
   const lowerQuestion = question.toLowerCase()
   if (/(open|closed|close|khola|bondho|খোলা|বন্ধ)/.test(lowerQuestion)
+    && /(friday|শুক্রবার)/.test(lowerQuestion)) {
+    return 'Heaven Furniture Mart is closed on Friday. We are open Saturday through Thursday from 10:00 AM to 9:30 PM Bangladesh time.'
+  }
+  if (/(open|closed|close|khola|bondho|খোলা|বন্ধ)/.test(lowerQuestion)
     && /(today|ajke|aj|shop|store|showroom|দোকান)/.test(lowerQuestion)) {
     return getOpeningStatus().message
   }
   if (isLocationQuestion(question)) return getLocationResponse()
+  if (/(deliver|delivery|install|installation|ডেলিভারি|ইনস্টল)/.test(lowerQuestion)) {
+    return 'Yes, we provide delivery and professional installation in Chattogram.'
+  }
   return getFurnitureAnswer(question)
 }
 
@@ -118,7 +125,12 @@ export async function handleChatRequest(request, response) {
     }
 
     const data = await groqResponse.json()
-    const reply = data.choices?.[0]?.message?.content?.trim()
+    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.output_text
+    const reply = typeof content === 'string'
+      ? content.trim()
+      : Array.isArray(content)
+        ? content.map((part) => typeof part === 'string' ? part : part?.text || '').join('').trim()
+        : ''
     if (!reply) {
       console.error('Groq API error: response did not contain a reply')
       return response.status(502).json({ reply: "I'm having trouble connecting right now. Please try again in a moment." })

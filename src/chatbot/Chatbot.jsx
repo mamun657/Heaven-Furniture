@@ -56,7 +56,7 @@ function Chatbot() {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const messageIdRef = useRef(0)
-  const apiBaseUrl = (import.meta.env.DEV ? (import.meta.env.VITE_API_URL || 'http://localhost:3000') : '').trim().replace(/\/+$/, '')
+  const apiBaseUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '')).trim().replace(/\/+$/, '')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -95,7 +95,20 @@ function Chatbot() {
       })
 
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.reply || `Chat request failed with ${response.status}`)
+      if (!response.ok) {
+        const statusMessages = {
+          400: 'Please enter a complete question so I can help.',
+          401: 'The assistant is not authorized right now. Please try again later.',
+          403: 'The assistant cannot access its service right now. Please try again later.',
+          404: 'The chat service could not be found. Please try again later.',
+          429: 'Please wait a moment before sending another message.',
+          500: 'The assistant is temporarily unavailable. Please try again later.',
+          502: 'I’m having trouble connecting right now. Please try again in a moment.',
+          503: 'The assistant is temporarily unavailable. Please contact the showroom directly.',
+          504: 'The assistant took too long to respond. Please try again in a moment.',
+        }
+        throw new Error(typeof data.reply === 'string' && data.reply.trim() ? data.reply : (statusMessages[response.status] || 'The assistant could not process that request.'))
+      }
       const answer = data.reply
       if (typeof answer !== 'string' || !answer.trim()) throw new Error('The assistant returned an invalid response.')
       setMessages((current) => [...current, {
