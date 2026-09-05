@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { businessKnowledge, getLocationResponse, getOpeningStatus, isLocationQuestion } from './businessKnowledge'
+import { businessKnowledge } from './businessKnowledge'
 import './chatbot.css'
 
 const quickQuestions = [
@@ -7,8 +7,6 @@ const quickQuestions = [
   'Where is your showroom?',
   'What furniture do you offer?',
 ]
-
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 const navigationLabels = {
   collections: 'Explore Collections',
@@ -45,12 +43,6 @@ function getNavigationAction(question, answer) {
               : null
 
   return section ? { label: navigationLabels[section], href: navigationTargets[section] } : null
-}
-
-function isOpeningQuestion(question) {
-  const text = question.toLowerCase()
-  return /(open|closed|close|khola|bondho|খোলা|বন্ধ)/.test(text)
-    && /(today|ajke|aj|shop|store|showroom|দোকান)/.test(text)
 }
 
 function Chatbot() {
@@ -92,41 +84,19 @@ function Chatbot() {
     setIsLoading(true)
 
     try {
-      if (isOpeningQuestion(trimmedQuestion)) {
-        const answer = getOpeningStatus().message
-        setMessages((current) => [...current, {
-          id: `${messageIdRef.current}-assistant`,
-          role: 'assistant',
-          content: answer,
-          action: { label: 'View Showroom Hours', href: businessKnowledge.sections.Showroom },
-        }])
-        return
-      }
-
-      if (isLocationQuestion(trimmedQuestion)) {
-        setMessages((current) => [...current, {
-          id: `${messageIdRef.current}-assistant`,
-          role: 'assistant',
-          content: getLocationResponse(),
-          action: { label: 'Open in Google Maps', href: businessKnowledge.location.googleMapsUrl, external: true },
-        }])
-        return
-      }
-
-      const response = await fetch(`${apiBaseUrl}/api/chat`, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question: trimmedQuestion,
+          message: trimmedQuestion,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
-          context: businessKnowledge,
-          openingStatus: getOpeningStatus(),
         }),
       })
 
-      if (!response.ok) throw new Error(`Chat request failed with ${response.status}`)
-      const data = await response.json()
-      const answer = data.answer || 'Sorry, I could not find that information. Please contact us directly.'
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.reply || `Chat request failed with ${response.status}`)
+      const answer = data.reply
+      if (typeof answer !== 'string' || !answer.trim()) throw new Error('The assistant returned an invalid response.')
       setMessages((current) => [...current, {
         id: `${messageIdRef.current}-assistant`,
         role: 'assistant',
@@ -134,11 +104,12 @@ function Chatbot() {
         action: getNavigationAction(trimmedQuestion, answer),
       }])
     } catch (error) {
-      console.error('Chatbot request failed:', error)
       setMessages((current) => [...current, {
         id: `${messageIdRef.current}-error`,
         role: 'assistant',
-        content: "Sorry, I couldn't process that right now. Please try again or contact us directly.",
+        content: error.message === 'Failed to fetch'
+          ? 'I’m having trouble connecting right now. Please try again in a moment.'
+          : (error.message || 'I’m having trouble connecting right now. Please try again in a moment.'),
       }])
     } finally {
       setIsLoading(false)
