@@ -44,7 +44,13 @@ export function isLocationQuestion(question = '') {
 }
 
 export function getLocationResponse() {
-  return `Our flagship showroom is located at ${businessKnowledge.location.address}.\n\nGoogle Maps: ${businessKnowledge.location.googleMapsUrl}`
+  return {
+    message: `Our flagship showroom is located at ${businessKnowledge.location.address}.`,
+    link: {
+      label: 'Visit Showroom',
+      url: businessKnowledge.location.googleMapsUrl,
+    },
+  }
 }
 
 export function getDhakaDateParts(date = new Date()) {

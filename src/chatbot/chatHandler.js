@@ -75,7 +75,12 @@ export async function handleChatRequest(request, response) {
   if (isRateLimited(request)) return response.status(429).json({ reply: 'Please wait a moment before sending another message.' })
 
   const businessAnswer = getBusinessAnswer(trimmedMessage)
-  if (businessAnswer) return response.json({ reply: businessAnswer })
+  if (businessAnswer) {
+    if (typeof businessAnswer === 'object') {
+      return response.json({ reply: businessAnswer.message, link: businessAnswer.link })
+    }
+    return response.json({ reply: businessAnswer })
+  }
 
   const apiKey = globalThis.process.env.GROQ_API_KEY
   const model = globalThis.process.env.GROQ_MODEL

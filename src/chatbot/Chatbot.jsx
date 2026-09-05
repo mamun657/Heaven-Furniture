@@ -45,6 +45,18 @@ function getNavigationAction(question, answer) {
   return section ? { label: navigationLabels[section], href: navigationTargets[section] } : null
 }
 
+function cleanAssistantContent(content) {
+  const googleMapsUrlPattern = /https?:\/\/(?:www\.)?google\.com\/maps[^\s)]+/gi
+  const embeddedUrl = content.match(googleMapsUrlPattern)?.[0]
+  const visibleContent = content
+    .replace(googleMapsUrlPattern, '')
+    .replace(/Google Maps:\s*/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  return { visibleContent, embeddedUrl }
+}
+
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -111,11 +123,17 @@ function Chatbot() {
       }
       const answer = data.reply
       if (typeof answer !== 'string' || !answer.trim()) throw new Error('The assistant returned an invalid response.')
+      const { visibleContent, embeddedUrl } = cleanAssistantContent(answer)
+      const responseLink = data.link && typeof data.link.url === 'string'
+        ? { label: data.link.label || 'Visit Showroom', href: data.link.url, external: true }
+        : embeddedUrl
+          ? { label: 'Visit Showroom', href: embeddedUrl, external: true }
+          : null
       setMessages((current) => [...current, {
         id: `${messageIdRef.current}-assistant`,
         role: 'assistant',
-        content: answer,
-        action: getNavigationAction(trimmedQuestion, answer),
+        content: visibleContent,
+        action: responseLink || getNavigationAction(trimmedQuestion, visibleContent),
       }])
     } catch (error) {
       setMessages((current) => [...current, {

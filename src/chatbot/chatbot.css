@@ -125,6 +125,12 @@
   font-weight: 700;
   text-decoration: none;
   letter-spacing: 0.03em;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.chatbot-action:hover {
+  color: #b66f4e;
+  transform: translateX(2px);
 }
 
 .chatbot-quick-questions {
