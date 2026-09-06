@@ -1,10 +1,11 @@
-import { businessKnowledge, getLocationResponse, getOpeningStatus, isLocationQuestion } from './businessKnowledge.js'
+import { businessKnowledge, getDeterministicBusinessAnswer, getOpeningStatus } from './businessKnowledge.js'
 
 const groqApiUrl = 'https://api.groq.com/openai/v1/chat/completions'
 const maxMessageLength = 2000
 const requestWindowMs = 60_000
 const requestLimit = 30
 const requestLog = new Map()
+const groqRequestTimeoutMs = 10_000
 
 function isRateLimited(request) {
   const address = request.ip || request.socket?.remoteAddress || request.headers?.['x-forwarded-for'] || 'unknown'
@@ -15,42 +16,8 @@ function isRateLimited(request) {
   return recentRequests.length > requestLimit
 }
 
-function getFurnitureAnswer(question) {
-  const text = question.toLowerCase()
-  const isBespoke = /(bespoke|custom|made[- ]to[- ]measure|কাস্টম|বেসপোক)/.test(text)
-  const isBedroom = /(bedroom|bed|wardrobe|dressing|বেডরুম|বিছানা|ওয়ারড্রোব)/.test(text)
-  const isFurnitureQuestion = /(furniture|sell|offer|available|have|আসবাব|ফার্নিচার|পাওয়া|পাবেন|কি কি|কী কী)/.test(text)
-
-  if (isBespoke && /(furniture|make|custom|কাস্টম|বেসপোক)/.test(text)) {
-    return 'Yes, our Bespoke Furniture service is made around your exact space, measurements, taste and requirements. We can shape the dimensions, materials, finishes, fabric, colors and design details around your project.\n\nA free design consultation is the natural place to begin. What room are you looking to furnish?'
-  }
-
-  if (isBedroom && isFurnitureQuestion) {
-    return 'Yes, our Bedroom Collection includes beds, wardrobes, dressing tables and bedside pieces, designed for restful, refined spaces. What kind of bedroom piece are you looking for?'
-  }
-
-  if (isFurnitureQuestion && !/(where|location|showroom|open|closed|hour|সময়|কোথায়)/.test(text)) {
-    return 'We offer thoughtfully designed furniture for living, dining, bedroom, office and outdoor spaces. Our collections include sofas, coffee tables, TV units, dining tables and chairs, beds, wardrobes, dressing tables, accent chairs, desks, storage pieces, consoles, and more.\n\nFor something more personal, our bespoke furniture service allows you to create pieces tailored to your exact space, measurements, and style preferences. If you tell me which room you’re furnishing, I can help you choose the most suitable options.'
-  }
-
-  return null
-}
-
 function getBusinessAnswer(question) {
-  const lowerQuestion = question.toLowerCase()
-  if (/(open|closed|close|khola|bondho|খোলা|বন্ধ)/.test(lowerQuestion)
-    && /(friday|শুক্রবার)/.test(lowerQuestion)) {
-    return 'Heaven Furniture Mart is closed on Friday. We are open Saturday through Thursday from 10:00 AM to 9:30 PM Bangladesh time.'
-  }
-  if (/(open|closed|close|khola|bondho|খোলা|বন্ধ)/.test(lowerQuestion)
-    && /(today|ajke|aj|shop|store|showroom|দোকান)/.test(lowerQuestion)) {
-    return getOpeningStatus().message
-  }
-  if (isLocationQuestion(question)) return getLocationResponse()
-  if (/(deliver|delivery|install|installation|ডেলিভারি|ইনস্টল)/.test(lowerQuestion)) {
-    return 'Yes, we provide delivery and professional installation in Chattogram.'
-  }
-  return getFurnitureAnswer(question)
+  return getDeterministicBusinessAnswer(question)
 }
 
 function getSystemPrompt(openingStatus) {
@@ -76,10 +43,10 @@ export async function handleChatRequest(request, response) {
 
   const businessAnswer = getBusinessAnswer(trimmedMessage)
   if (businessAnswer) {
-    if (typeof businessAnswer === 'object') {
-      return response.json({ reply: businessAnswer.message, link: businessAnswer.link })
-    }
-    return response.json({ reply: businessAnswer })
+    console.log('[chat] deterministic route used')
+    const reply = typeof businessAnswer === 'object' && businessAnswer.reply ? businessAnswer.reply : businessAnswer
+    const link = typeof businessAnswer === 'object' ? businessAnswer.link : undefined
+    return response.json({ reply, ...(link ? { link } : {}) })
   }
 
   const apiKey = globalThis.process.env.GROQ_API_KEY
@@ -100,9 +67,10 @@ export async function handleChatRequest(request, response) {
       .map((entry) => ({ role: entry.role, content: entry.content.slice(0, maxMessageLength) }))
     : []
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15_000)
+  const timeout = setTimeout(() => controller.abort(), groqRequestTimeoutMs)
 
   try {
+    console.log('[chat] route: groq')
     const groqResponse = await fetch(groqApiUrl, {
       method: 'POST',
       headers: {
@@ -143,8 +111,8 @@ export async function handleChatRequest(request, response) {
     return response.json({ reply })
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.error('Groq API error: request timed out after 15 seconds')
-      return response.status(504).json({ reply: 'The assistant took too long to respond. Please try again in a moment.' })
+      console.error('[chat] Groq timeout after 10 seconds')
+      return response.status(504).json({ reply: 'I’m sorry, the AI assistant is taking longer than expected. Please try again, or ask me about our showroom, opening hours, furniture collections, or services.' })
     }
     console.error('Chat endpoint error:', error.message)
     return response.status(502).json({ reply: "I'm having trouble connecting right now. Please try again in a moment." })

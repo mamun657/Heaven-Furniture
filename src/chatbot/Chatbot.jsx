@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { businessKnowledge } from './businessKnowledge'
+import { businessKnowledge, getDeterministicBusinessAnswer } from './businessKnowledge'
 import './chatbot.css'
 
 const quickQuestions = [
@@ -69,10 +69,24 @@ function Chatbot() {
   const inputRef = useRef(null)
   const messageIdRef = useRef(0)
   const apiBaseUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '')).trim().replace(/\/+$/, '')
+  const requestTimeoutMs = 14_000
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages, isLoading])
+
+  useEffect(() => {
+    const healthUrl = `${apiBaseUrl}/api/health`
+    const controller = new AbortController()
+
+    fetch(healthUrl, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: controller.signal,
+    }).catch(() => {})
+
+    return () => controller.abort()
+  }, [apiBaseUrl])
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -89,17 +103,41 @@ function Chatbot() {
     const trimmedQuestion = question.trim()
     if (!trimmedQuestion || isLoading) return
 
+    const localFallback = getDeterministicBusinessAnswer(trimmedQuestion)
+    if (localFallback) {
+      const requestId = `${Date.now()}-${messageIdRef.current + 1}`
+      messageIdRef.current += 1
+      const userMessage = { id: `${requestId}-user`, role: 'user', content: trimmedQuestion }
+      const responseAction = localFallback.link
+        ? { label: localFallback.link.label || 'Visit Showroom', href: localFallback.link.url, external: true }
+        : undefined
+      setMessages((current) => [...current, userMessage, {
+        id: `${requestId}-assistant`,
+        role: 'assistant',
+        content: localFallback.reply,
+        action: responseAction || getNavigationAction(trimmedQuestion, localFallback.reply),
+      }])
+      setInput('')
+      setShowQuickReplies(false)
+      return
+    }
+
+    const requestId = `${Date.now()}-${messageIdRef.current + 1}`
     messageIdRef.current += 1
-    const userMessage = { id: `${messageIdRef.current}-user`, role: 'user', content: trimmedQuestion }
+    const userMessage = { id: `${requestId}-user`, role: 'user', content: trimmedQuestion }
     setMessages((current) => [...current, userMessage])
     setInput('')
     setShowQuickReplies(false)
     setIsLoading(true)
 
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), requestTimeoutMs)
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           message: trimmedQuestion,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
@@ -117,7 +155,7 @@ function Chatbot() {
           500: 'The assistant is temporarily unavailable. Please try again later.',
           502: 'I’m having trouble connecting right now. Please try again in a moment.',
           503: 'The assistant is temporarily unavailable. Please contact the showroom directly.',
-          504: 'The assistant took too long to respond. Please try again in a moment.',
+          504: 'I’m sorry, the AI assistant is taking longer than expected. Please try again, or ask me about our showroom, opening hours, furniture collections, or services.',
         }
         throw new Error(typeof data.reply === 'string' && data.reply.trim() ? data.reply : (statusMessages[response.status] || 'The assistant could not process that request.'))
       }
@@ -130,20 +168,26 @@ function Chatbot() {
           ? { label: 'Visit Showroom', href: embeddedUrl, external: true }
           : null
       setMessages((current) => [...current, {
-        id: `${messageIdRef.current}-assistant`,
+        id: `${requestId}-assistant`,
         role: 'assistant',
         content: visibleContent,
         action: responseLink || getNavigationAction(trimmedQuestion, visibleContent),
       }])
     } catch (error) {
+      const isRequestTimeout = error?.name === 'AbortError'
+      const fallbackReply = localFallback ? localFallback.reply : null
       setMessages((current) => [...current, {
-        id: `${messageIdRef.current}-error`,
+        id: `${requestId}-error`,
         role: 'assistant',
-        content: error.message === 'Failed to fetch'
-          ? 'I’m having trouble connecting right now. Please try again in a moment.'
-          : (error.message || 'I’m having trouble connecting right now. Please try again in a moment.'),
+        content: isRequestTimeout
+          ? 'I’m sorry, the AI assistant is taking longer than expected. Please try again, or ask me about our showroom, opening hours, furniture collections, or services.'
+          : (fallbackReply || error.message || 'I’m having trouble connecting right now. Please try again in a moment.'),
+        action: localFallback?.link
+          ? { label: localFallback.link.label || 'Visit Showroom', href: localFallback.link.url, external: true }
+          : undefined,
       }])
     } finally {
+      window.clearTimeout(timeoutId)
       setIsLoading(false)
     }
   }

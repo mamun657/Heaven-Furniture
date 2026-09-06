@@ -15,6 +15,7 @@ const allowedOrigins = new Set([
   ...configuredFrontendOrigins,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://heaven-furniture.onrender.com',
 ])
 
 app.disable('x-powered-by')
@@ -23,13 +24,16 @@ app.use((request, response, next) => {
   if (!origin || !allowedOrigins.has(origin)) return next()
 
   response.setHeader('Access-Control-Allow-Origin', origin)
-  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   response.setHeader('Vary', 'Origin')
   if (request.method === 'OPTIONS') return response.sendStatus(204)
   return next()
 })
 app.use(express.json({ limit: '32kb' }))
+app.get('/api/health', (_request, response) => {
+  response.json({ ok: true, service: 'heaven-furniture-api' })
+})
 app.post('/api/chat', handleChatRequest)
 
 const distPath = path.join(__dirname, 'dist')
